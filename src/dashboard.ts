@@ -242,23 +242,22 @@ async function init() {
   stock_item.appendChild(stock_item_table);
 
   const stock_data = fetch(
-    "https://netjes.jorismertz.nl/api/get-stock-under-threshold"
+    "https://home.jorismertz.dev/stock-under-threshold"
   ).then(async (response) => {
     interface ResponseType {
-      title: number;
-      productId: number;
-      variantId: number;
-      stock: number;
+      id: number;
+      title: string;
+      variants: Record<String, { stockLevel: number; stockAlert: number; }>;
     }
     const data = (await response.json()) as ResponseType[];
 
     data.forEach((item) => {
       const row = document.createElement("tr");
-      // row.classList.add("order_table_row_styles");
+      const variant = Object.values(item.variants)[0]
       row.innerHTML = `
       <td>${item.title}</td>
-      <td><a href="https://nettenshop.webshopapp.com/admin/products/${item.productId}">${item.variantId}</a></td>
-      <td>${item.stock}</td>
+      <td><a href="https://nettenshop.webshopapp.com/admin/products/${item.id}">${variant.id}</a></td>
+      <td>${Object.values(item.variants)[0].stockLevel}</td>
       `;
 
       stock_item_table_body.appendChild(row);

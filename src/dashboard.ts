@@ -1,4 +1,76 @@
+const orderStatusMap = {
+  "manco-bestelling-van-dijk": "Manco",
+  "spoedbestelling-jvd": "Spoed",
+  "besteld-bij-van-jvd-speciale-bestelling": "Speciale bestelling",
+  "rechtstreeks-vanuit-fabriek-verzenden": "Fabriek verzenden"
+}
+
+type OrderStatus = keyof typeof orderStatusMap;
+
 type CSS = Partial<CSSStyleDeclaration>;
+
+type FilteredOrder = {
+  order_number: string;
+  customer_name: string;
+  href: string;
+  date: string;
+}
+
+class Lightspeed {
+  endpoint: string = "https://nettenshop.webshopapp.com"
+
+  async listOrders(status: string): Promise<Array<FilteredOrder>> {
+    const url = `${this.endpoint}/admin/orders?custom_status=${status}`;
+    const response = await fetch(url);
+
+    const html = await response.text();
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, "text/html");
+
+    const tableElement = doc.querySelector(
+      "#table_orders > div > div > table > tbody"
+    );
+
+    return Array.from(tableElement?.children ?? []).map((row) => {
+      const order_number_element = row.children[1].children[0].children[0];
+      const order_number = order_number_element.innerHTML.trim();
+      const href = order_number_element.getAttribute("href") || "#";
+      const name = row.children[2].children[0].children[0].innerHTML.trim();
+      const stringDate = row.children[4].children[0].innerHTML
+        .trim()
+        .split(" om ")[0];
+
+      return {
+        order_number,
+        customer_name: name,
+        href,
+        date: stringDate,
+      }
+    })
+  }
+}
+
+type StockVariant = {
+  stockLevel: number;
+  stockAlert: number;
+};
+
+type StockItem = {
+  id: number;
+  title: string;
+  variants: Record<string, StockVariant>;
+}
+
+class Adapter {
+  endpoint: string = "https://nettenshop.juliamertz.dev"
+
+  async getStockUnderThreshold(): Promise<Array<StockItem>> {
+    const response = await fetch(this.endpoint + "/stock-under-threshold");
+    const data = await response.json()
+    if (!Array.isArray(data)) throw new Error('invalid stock response from adapter')
+    return data as Array<StockItem>
+  }
+}
 
 function addStyles(styles: CSS, el: HTMLElement) {
   for (const key in styles) {
@@ -6,50 +78,10 @@ function addStyles(styles: CSS, el: HTMLElement) {
   }
 }
 
-interface FilteredOrder {
-  order_number: string;
-  customer_name: string;
-  href: string;
-  date: string;
-}
-
-// Gets orders by custom status filter and parses them
-async function getFilteredOrdersByCustomStatus(status: string) {
-  const url =
-    "https://nettenshop.webshopapp.com/admin/orders?custom_status=" + status;
-
-  const response = await fetch(url);
-  const html = await response.text();
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(html, "text/html");
-
-  const orders_table = doc.querySelector(
-    "#table_orders > div > div > table > tbody"
-  );
-
-  const result: FilteredOrder[] = [];
-
-  for (const row of Array.from(orders_table?.children || [])) {
-    const order_number_element = row.children[1].children[0].children[0];
-    const order_number = order_number_element.innerHTML.trim();
-    const href = order_number_element.getAttribute("href") || "#";
-    const name = row.children[2].children[0].children[0].innerHTML.trim();
-    const stringDate = row.children[4].children[0].innerHTML
-      .trim()
-      .split(" om ")[0];
-
-    result.push({
-      order_number,
-      customer_name: name,
-      href,
-      date: stringDate,
-    });
-  }
-
-  return result;
-}
-
 async function init() {
+  const lightspeed = new Lightspeed()
+  const adapter = new Adapter()
+
   const $ = (el: string) => document.querySelectorAll(el);
 
   const styles = `
@@ -127,7 +159,7 @@ async function init() {
     if (has_already_run) {
       return;
     }
-  } catch (e) {}
+  } catch (e) { }
 
   const rerun_preventer = document.createElement("has-run");
   dashboard_items.appendChild(rerun_preventer);
@@ -144,7 +176,7 @@ async function init() {
         row.remove();
       }
     }
-  } catch (e) {}
+  } catch (e) { }
 
   // Remove warning that pops up on every page load.
   const warning = $("#content > div:nth-child(2) > div.alert.wide.warning.top");
@@ -161,35 +193,19 @@ async function init() {
   order_item_wrapper.style.marginTop = "12px";
   dashboard_items.appendChild(order_item_wrapper);
 
-  const orderStatussesToDisplay = [
-    "manco-bestelling-van-dijk",
-    "spoedbestelling-jvd",
-    "besteld-bij-van-jvd-speciale-bestelling",
-    "rechtstreeks-vanuit-fabriek-verzenden",
-  ];
-
-  const statusNameMap = [
-    "Manco",
-    "Spoed",
-    "Speciale bestelling",
-    "Fabriek verzenden",
-  ];
-
   const items_to_add: HTMLDivElement[] = [];
 
-  for await (const status of orderStatussesToDisplay) {
-    const status_name = statusNameMap[orderStatussesToDisplay.indexOf(status)];
-
-    getFilteredOrdersByCustomStatus(status).then(async (orders) => {
+  for await (const [status, displayName] of Object.entries(orderStatusMap)) {
+    lightspeed.listOrders(status).then(async (orders) => {
       const item = document.createElement("div");
       item.classList.add("item_styles");
 
       const title = document.createElement("h3");
       title.classList.add("subtitle_styles");
 
-      const order_amount = orders.length || 0;
+      const order_amount = orders.length;
 
-      title.innerHTML = status_name + ` <span>(${order_amount})</span>`;
+      title.innerHTML = displayName + ` <span>(${order_amount})</span>`;
       item.appendChild(title);
 
       const row_wrapper = document.createElement("div");
@@ -241,17 +257,8 @@ async function init() {
   stock_item_table.appendChild(stock_item_table_body);
   stock_item.appendChild(stock_item_table);
 
-  const stock_data = fetch(
-    "https://home.jorismertz.dev/stock-under-threshold"
-  ).then(async (response) => {
-    interface ResponseType {
-      id: number;
-      title: string;
-      variants: Record<String, { stockLevel: number; stockAlert: number; }>;
-    }
-    const data = (await response.json()) as ResponseType[];
-
-    data.forEach((item) => {
+  adapter.getStockUnderThreshold().then((stock) => {
+    stock.forEach((item) => {
       const row = document.createElement("tr");
       const variant = Object.values(item.variants)[0]
       row.innerHTML = `
@@ -264,7 +271,7 @@ async function init() {
     });
 
     order_item_wrapper.appendChild(stock_item);
-  });
+  })
 }
 
 (async () => {

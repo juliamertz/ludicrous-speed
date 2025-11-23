@@ -3,14 +3,14 @@ name: Release Extensions
 on:
   push:
     tags:
-      - 'v*'  # Triggers on version tags like v1.1.0, v1.2.0, etc.
-  workflow_dispatch:  # Allows manual triggering
+      - "v*" # Triggers on version tags like v1.1.0, v1.2.0, etc.
+  workflow_dispatch: # Allows manual triggering
 
 jobs:
   release:
     runs-on: ubuntu-latest
     permissions:
-      contents: write  # Required to create releases
+      contents: write # Required to create releases
 
     steps:
       - name: Checkout code
@@ -93,4 +93,3 @@ jobs:
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-

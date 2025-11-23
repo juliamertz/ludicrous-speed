@@ -46,4 +46,3 @@ export function removeClassname(className: string, element?: Element | null) {
       .join(" ");
   }
 }
-

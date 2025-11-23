@@ -16,7 +16,7 @@ export function createOrderProcessingChart(data: Array<MontlyProcessedMetric>) {
     id: "orders-chart",
     title: "Processed DHL orders",
   });
-  container.style.margin = '7px' // nice magic number...
+  container.style.margin = "7px"; // nice magic number...
   container.appendChild(createChart(data));
 
   return container;
@@ -107,7 +107,8 @@ function createChart(data: Array<MontlyProcessedMetric>) {
   graph.fillAlphas = 0;
   graph.useLineColorForBulletBorder = true;
   graph.valueField = "entries"; // ← CHANGED BACK
-  graph.balloonText = "[[category]]<br><b><span style='font-size:14px;'>[[value]] entries</span></b>";
+  graph.balloonText =
+    "[[category]]<br><b><span style='font-size:14px;'>[[value]] entries</span></b>";
   graph.balloonColor = "#494c4c";
   chart.addGraph(graph);
 

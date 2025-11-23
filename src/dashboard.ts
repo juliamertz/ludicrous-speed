@@ -7,7 +7,12 @@ import { Adapter } from "./api/adapter";
 
 import { dashboardCSS } from "./styles/dashboard-css";
 import { createGridContainer } from "./utils/layout";
-import { injectStyles, preventDoubleRun, removeElements, removeClassname } from "./utils/dom";
+import {
+  injectStyles,
+  preventDoubleRun,
+  removeElements,
+  removeClassname,
+} from "./utils/dom";
 
 import { createOrderList } from "./components/order-list";
 import { createStockTable } from "./components/stock-table";
@@ -15,11 +20,13 @@ import { createOrderProcessingChart } from "./components/dhl-orders";
 
 function cleanupDashboard(container: Element): void {
   // advertisment card to the right of graph
-  removeElements("div:has(> div.dashboard-card-blog)", container)
+  removeElements("div:has(> div.dashboard-card-blog)", container);
 
   // expand graph to fill up gap of advertisment
-  const turnoverGraph = container.querySelector('div.W-8--m:has(div#dashboard-turnover-graph)')
-  removeClassname("W-8--m", turnoverGraph)
+  const turnoverGraph = container.querySelector(
+    "div.W-8--m:has(div#dashboard-turnover-graph)",
+  );
+  removeClassname("W-8--m", turnoverGraph);
 }
 
 async function init(): Promise<void> {
@@ -34,9 +41,11 @@ async function init(): Promise<void> {
 
   cleanupDashboard(dashboardContainer);
 
-  const changelogContainer = dashboardContainer.querySelector(`div.Flex.FlexWrap:has(a[href="/admin/changelog"])`)
+  const changelogContainer = dashboardContainer.querySelector(
+    `div.Flex.FlexWrap:has(a[href="/admin/changelog"])`,
+  );
   if (changelogContainer) {
-    changelogContainer.remove()
+    changelogContainer.remove();
   }
 
   if (preventDoubleRun(dashboardContainer)) {
@@ -47,7 +56,7 @@ async function init(): Promise<void> {
   const adapter = new Adapter();
 
   const orderGrid = createGridContainer({ columns: 2 });
-  orderGrid.style.marginTop = '1rem';
+  orderGrid.style.marginTop = "1rem";
   dashboardContainer.appendChild(orderGrid);
 
   const stockGrid = createGridContainer({});
@@ -80,15 +89,19 @@ async function init(): Promise<void> {
   await Promise.all(orderPromises);
 
   try {
-    const chartData = await adapter.getMonthlyProcessedChart()
-    const chart = createOrderProcessingChart(chartData)
-    dashboardContainer.appendChild(chart)
+    const chartData = await adapter.getMonthlyProcessedChart();
+    const chart = createOrderProcessingChart(chartData);
+    dashboardContainer.appendChild(chart);
   } catch (error) {
-    console.error({ extension: "ludicrous-speed", action: "insert-monthy-processed-chart", error });
+    console.error({
+      extension: "ludicrous-speed",
+      action: "insert-monthy-processed-chart",
+      error,
+    });
   }
 
   if (changelogContainer) {
-    dashboardContainer.appendChild(changelogContainer)
+    dashboardContainer.appendChild(changelogContainer);
   }
 }
 

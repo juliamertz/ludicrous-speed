@@ -2,18 +2,18 @@ export type StockVariant = {
   stockLevel: number;
   stockAlert: number;
   id?: string;
-}
+};
 
 export type StockItem = {
   id: number;
   title: string;
   variants: Record<string, StockVariant>;
-}
+};
 
 export type MontlyProcessedMetric = {
-  month: string,
-  entries: number,
-}
+  month: string;
+  entries: number;
+};
 
 export class Adapter {
   private endpoint: string = "https://nettenshop.juliamertz.dev";

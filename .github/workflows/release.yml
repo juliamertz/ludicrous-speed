@@ -1,0 +1,63 @@
+name: Release Extensions
+
+on:
+  push:
+    tags:
+      - 'v*'  # Triggers on version tags like v1.1.0, v1.2.0, etc.
+  workflow_dispatch:  # Allows manual triggering
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Required to create releases
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Build Chrome extension
+        run: make build-chrome
+
+      - name: Build Firefox extension
+        run: make build-firefox
+
+      - name: Package Chrome extension
+        run: |
+          cd dist/chrome
+          zip -r ../ludicrous-speed-chrome.zip .
+          cd ../..
+
+      - name: Package Firefox extension
+        run: |
+          cd dist/firefox
+          zip -r ../ludicrous-speed-firefox.zip .
+          cd ../..
+
+      - name: Extract version from manifest
+        id: get_version
+        run: |
+          VERSION=$(grep -o '"version": "[^"]*"' manifests/chrome.json | cut -d'"' -f4)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Extension version: $VERSION"
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/ludicrous-speed-chrome.zip
+            dist/ludicrous-speed-firefox.zip
+          name: Release v${{ steps.get_version.outputs.version }}
+          tag_name: ${{ github.ref_name }}
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+

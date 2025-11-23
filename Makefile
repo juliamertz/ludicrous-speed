@@ -2,7 +2,7 @@ unpacked_chrome = dist/chrome
 unpacked_firefox = dist/firefox
 dist = dist
 
-.PHONY: build build-chrome build-firefox pack pack-chrome pack-firefox clean
+.PHONY: build build-chrome build-firefox pack pack-chrome pack-firefox pack-zip pack-zip-chrome pack-zip-firefox clean
 
 build: build-chrome build-firefox
 
@@ -35,6 +35,14 @@ pack-chrome: build-chrome
 
 pack-firefox: build-firefox
 	tar -czvf $(dist)/ludicrous-speed-firefox.tar.gz -C $(unpacked_firefox) .
+
+pack-zip: pack-zip-chrome pack-zip-firefox
+
+pack-zip-chrome: build-chrome
+	cd $(unpacked_chrome) && zip -r ../ludicrous-speed-chrome.zip .
+
+pack-zip-firefox: build-firefox
+	cd $(unpacked_firefox) && zip -r ../ludicrous-speed-firefox.zip .
 
 clean:
 	rm -rf $(dist)

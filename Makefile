@@ -1,43 +1,47 @@
-unpacked_chrome = dist/chrome
-unpacked_firefox = dist/firefox
 dist = dist
+unpacked_chrome = $(dist)/chrome
+unpacked_firefox = $(dist)/firefox
+
+private_key_path ?= scripts/private-key.pem
+dashboard_dir ?= $(dist)/dashboard
+dashboard_path ?= $(dashboard_dir)/dashboard.js
+signature_path = $(dashboard_path).sig
+
 
 .PHONY: build build-chrome build-firefox build-dashboard pack pack-chrome pack-firefox pack-zip pack-zip-chrome pack-zip-firefox clean
 
-build: build-chrome build-firefox
+clean:
+	rm -rf result $(dist)
+
+build: clean build-chrome build-firefox build-dashboard
 
 build-chrome:
+	nix build .#background-js-chrome
 	rm -rf $(unpacked_chrome)
 	mkdir -p $(unpacked_chrome)
-	bun build ./src/background.ts --outfile=$(unpacked_chrome)/background.js
-	cp manifests/chrome.json $(unpacked_chrome)/manifest.json
+	cp -r --no-preserve=mode ./result/* $(unpacked_chrome)
 
 build-firefox:
+	nix build .#background-js-firefox
 	rm -rf $(unpacked_firefox)
 	mkdir -p $(unpacked_firefox)
-	bun build ./src/background.ts --outfile=$(unpacked_firefox)/background.js
-	cp manifests/firefox.json $(unpacked_firefox)/manifest.json
+	cp -r --no-preserve=mode ./result/* $(unpacked_firefox)
 
-# Build dashboard.js for server deployment
+sign-dashboard: $(dashboard_path) $(private_key_path)
+	@echo "Signing $(dashboard_path)..."
+	@openssl pkeyutl -sign \
+		-inkey $(private_key_path) \
+		-in $(dashboard_path) \
+		-rawin \
+		-out $(signature_path).tmp
+	@base64 < $(signature_path).tmp > $(signature_path)
+	@rm $(signature_path).tmp
+
 build-dashboard:
-	@echo "/* Auto-generated file - do not edit manually */" > src/styles/dashboard-css.ts
-	@echo "/* Generated from dashboard.css */" >> src/styles/dashboard-css.ts
-	@echo "export const dashboardCSS = \`$$(cat src/styles/dashboard.css)\`;" >> src/styles/dashboard-css.ts
-	bun build ./src/dashboard.ts --outfile=$(dist)/dashboard.js
-	@if [ -f scripts/private-key.pem ]; then \
-		bun scripts/sign-dashboard.js $(dist)/dashboard.js; \
-		echo "dashboard.js signed"; \
-	else \
-		echo "Private key not found."; \
-	fi
-
-pack: pack-chrome pack-firefox
-
-pack-chrome: build-chrome
-	tar -czvf $(dist)/ludicrous-speed-chrome.tar.gz -C $(unpacked_chrome) .
-
-pack-firefox: build-firefox
-	tar -czvf $(dist)/ludicrous-speed-firefox.tar.gz -C $(unpacked_firefox) .
+	nix build .#dashboard-js
+	mkdir -p $(dashboard_dir)
+	cp --no-preserve=mode result/dashboard.js $(dashboard_dir)/dashboard.js
+	$(MAKE) sign-dashboard
 
 pack-zip: pack-zip-chrome pack-zip-firefox
 
@@ -46,6 +50,3 @@ pack-zip-chrome: build-chrome
 
 pack-zip-firefox: build-firefox
 	cd $(unpacked_firefox) && zip -r ../ludicrous-speed-firefox.zip .
-
-clean:
-	rm -rf $(dist)

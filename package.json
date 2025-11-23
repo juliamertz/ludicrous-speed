@@ -1,5 +1,6 @@
 {
   "name": "ludicrous-speed",
+  "version": "1.1.0",
   "devDependencies": {
     "@types/chrome": "^0.0.239",
     "@types/node": "^20.3.3"

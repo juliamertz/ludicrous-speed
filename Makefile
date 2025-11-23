@@ -2,7 +2,7 @@ dist = dist
 unpacked_chrome = $(dist)/chrome
 unpacked_firefox = $(dist)/firefox
 
-private_key_path ?= scripts/private-key.pem
+private_key_path ?= private-key.pem
 dashboard_dir ?= $(dist)/dashboard
 dashboard_path ?= $(dashboard_dir)/dashboard.js
 signature_path = $(dashboard_path).sig

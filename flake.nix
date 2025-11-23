@@ -13,6 +13,7 @@
     systems,
     nix-filter,
   }: let
+    filter = nix-filter.lib;
     inherit (nixpkgs) lib;
     eachSystem = f:
       lib.genAttrs (import systems) (
@@ -29,7 +30,11 @@
         pname = "dashboard.js";
         version = "0.1.1";
 
-        src = ./.;
+        src = filter {
+          root = ./.;
+          include = [./src];
+          exclude = [./src/background.ts];
+        };
 
         patchPhase = let
           dashboardCss =
@@ -55,15 +60,44 @@
         '';
       };
 
+      manifestFor = targetBrowser:
+        {
+          name = "LudicrousSpeed";
+          version = "1.1.0";
+          manifest_version = 3;
+          permissions = ["scripting"];
+          host_permissions = ["<all_urls>"];
+          background =
+            if targetBrowser == "firefox"
+            then {scripts = ["background.js"];}
+            else if targetBrowser == "chrome"
+            then {service_worker = "background.js";}
+            else throw "invalid browser target: '${targetBrowser}'";
+        }
+        // lib.optionalAttrs (targetBrowser == "firefox") {
+          browser_specific_settings = {
+            gecko = {
+              id = "ludicrousspeed@example.com";
+            };
+          };
+        };
+
       backgroundJSFor = targetBrowser: let
-        manifestPath = ./manifests/${targetBrowser}.json;
+        manifest = pkgs.writeText "manifest.json" (builtins.toJSON (manifestFor targetBrowser));
       in
         pkgs.buildNpmPackage {
           pname = "background.js";
           version = "0.1.1";
 
-          src = ./.;
-          npmDepsHash = "sha256-2djtxoV6kEcy8dJAgFRH553RCWEJGpiC1aphKMbuSao=";
+          src = filter {
+            root = ./.;
+            include = [
+              ./package.json
+              ./package-lock.json
+              ./src/background.ts
+            ];
+          };
+          npmDepsHash = "sha256-fVVKnfDO6V0uP2SFI33NS73p11Fh+Np9BxXmv2Tp9B8=";
 
           buildPhase = ''
             ${lib.getExe pkgs.bun} build ./src/background.ts --outfile=bundle.js
@@ -73,7 +107,7 @@
           installPhase = ''
             mkdir -p $out
             install background.js $out/background.js
-            install ${manifestPath} $out/manifest.json
+            install ${manifest} $out/manifest.json
           '';
         };
 

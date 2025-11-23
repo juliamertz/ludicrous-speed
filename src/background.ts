@@ -6,18 +6,12 @@ const DASHBOARD_SIGNATURE_URL = CDN_URL + "/dashboard.js.sig";
 
 const PUBLIC_KEY_BASE64 = "77etFSOJuWxws8IL5gytqwxzP0MQtF4aHdr1G0fouf4=";
 
-async function importPublicKey(publicKeyBase64: string): Promise<CryptoKey> {
-  const publicKeyBytes = Uint8Array.from(atob(publicKeyBase64), c => c.charCodeAt(0));
+async function importPublicKey(encoded: string): Promise<CryptoKey> {
+  const algo = { name: "Ed25519" }
+  const extractable = false
+  const bytes = Uint8Array.from(atob(encoded), c => c.charCodeAt(0));
 
-  return await crypto.subtle.importKey(
-    "raw",
-    publicKeyBytes,
-    {
-      name: "Ed25519",
-    },
-    false,
-    ["verify"]
-  );
+  return await crypto.subtle.importKey("raw", bytes, algo, extractable, ["verify"]);
 }
 
 async function verifySignature(
@@ -40,8 +34,12 @@ async function verifySignature(
   }
 }
 
-async function fetchDashboardCode(): Promise<{ code: string; signature: string }> {
+async function fetchDashboardCode(): Promise<string> {
   try {
+    if (!PUBLIC_KEY_BASE64) {
+      throw new Error("No public key")
+    }
+
     const [codeResponse, sigResponse] = await Promise.all([
       fetch(DASHBOARD_URL, {
         cache: "no-store",
@@ -54,15 +52,23 @@ async function fetchDashboardCode(): Promise<{ code: string; signature: string }
     if (!codeResponse.ok) {
       throw new Error(`Failed to fetch dashboard code: ${codeResponse.status} ${codeResponse.statusText}`);
     }
-
     if (!sigResponse.ok) {
       throw new Error(`Failed to fetch signature: ${sigResponse.status} ${sigResponse.statusText}`);
     }
 
-    const code = await codeResponse.text();
-    const signature = await sigResponse.text();
+    const [code, signature] = await Promise.all([
+      codeResponse.text(),
+      sigResponse.text()
+    ]);
 
-    return { code: code.trim(), signature: signature.trim() };
+    const publicKey = await importPublicKey(PUBLIC_KEY_BASE64);
+    const isValid = await verifySignature(code, signature, publicKey);
+
+    if (!isValid) {
+      throw new Error("Dashboard code signature verification failed. Code may be compromised.");
+    }
+
+    return code.trim()
   } catch (error) {
     throw new Error(`Error fetching dashboard code: ${error instanceof Error ? error.message : String(error)}`);
   }
@@ -72,68 +78,25 @@ browser.tabs.onUpdated.addListener(async function(tabID, info, tab) {
   const isDashboard = tab.url === "https://nettenshop.webshopapp.com/admin/";
 
   if (isDashboard && info.status === "complete") {
-      try {
-        const { code, signature } = await fetchDashboardCode();
-        if (!PUBLIC_KEY_BASE64) {
-          console.error("No public key")
-          throw new Error("No public key")
-        }
-
-        const publicKey = await importPublicKey(PUBLIC_KEY_BASE64);
-        const isValid = await verifySignature(code, signature, publicKey);
-
-        if (!isValid) {
-          console.error("failed to verify code signature")
-          throw new Error("Dashboard code signature verification failed. Code may be compromised.");
-        }
-
-        const executeCode = (codeToExecute: string) => {
+    try {
+      const code = await fetchDashboardCode();
+      await browser.scripting.executeScript({
+        target: { tabId: tabID },
+        args: [code],
+        func: (content: string) => {
           const script = document.createElement('script');
-          script.textContent = codeToExecute;
+          script.textContent = content;
           (document.head || document.documentElement).appendChild(script);
           script.remove();
-        };
-
-        try {
-          const results = await browser.scripting.executeScript({
-            target: { tabId: tabID },
-            func: executeCode,
-            args: [code],
-          });
-
-          if (results && results.length > 0) {
-            results.forEach((result, index) => {
-              if (result.error) {
-                console.error(`Frame ${index} execution error:`, result.error);
-              }
-            });
-          }
-        } catch (frameError) {
-          console.error("Error executing in main frame:", frameError);
-          if (frameError instanceof Error) {
-            console.error("Frame error details:", frameError.message, frameError.stack);
-          }
-          try {
-            const allFrameResults = await browser.scripting.executeScript({
-              target: { tabId: tabID, allFrames: true },
-              func: executeCode,
-              args: [code],
-            });
-          } catch (allFramesError) {
-            console.error("Error executing in all frames:", allFramesError);
-            if (allFramesError instanceof Error) {
-              console.error("All frames error details:", allFramesError.message, allFramesError.stack);
-            }
-            throw allFramesError;
-          }
-        }
-      } catch (error) {
-        console.error("Error in dashboard injection:", error);
-        if (error instanceof Error) {
-          console.error("Error message:", error.message);
-          console.error("Error stack:", error.stack);
-        }
-        // TODO: error tracking service
+        },
+      });
+    } catch (error) {
+      console.error("Error in dashboard injection:", error);
+      if (error instanceof Error) {
+        console.error("message:", error.message);
+        console.error("stack:", error.stack);
       }
+      // TODO: error tracking service
+    }
   }
 });

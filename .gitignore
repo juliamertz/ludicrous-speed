@@ -1,8 +1,11 @@
-result
-node_modules/
-dist/
 .direnv
 .DS_Store
+
+result
+dist/
+
+node_modules/
+
+# generated
 src/styles/dashboard-css.ts
-scripts/private-key.pem
-scripts/public-key.txt
+private-key.pem

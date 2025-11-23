@@ -3,3 +3,5 @@ dist/
 .direnv
 .DS_Store
 src/styles/dashboard-css.ts
+scripts/private-key.pem
+scripts/public-key.txt

@@ -49,6 +49,34 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Extension version: $VERSION"
 
+      - name: Generate release body
+        id: release_body
+        run: |
+          cat > /tmp/release_body.md << 'EOF'
+          ## Installation Instructions
+
+          ### Chrome / Chromium
+
+          1. Download `ludicrous-speed-chrome.zip` from the assets below
+          2. Extract the ZIP file to a folder on your computer
+          3. Open Chrome and navigate to `chrome://extensions/`
+          4. Enable "Developer mode" (toggle in the top right)
+          5. Click "Load unpacked"
+          6. Select the extracted folder
+
+          ### Firefox
+
+          1. Download `ludicrous-speed-firefox.zip` from the assets below
+          2. Extract the ZIP file to a folder on your computer
+          3. Open Firefox and navigate to `about:debugging`
+          4. Click "This Firefox" in the left sidebar
+          5. Click "Load Temporary Add-on..."
+          6. Navigate to the extracted folder and select `manifest.json`
+          EOF
+          echo "body<<EOF" >> $GITHUB_OUTPUT
+          cat /tmp/release_body.md >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
@@ -57,6 +85,7 @@ jobs:
             dist/ludicrous-speed-firefox.zip
           name: Release v${{ steps.get_version.outputs.version }}
           tag_name: ${{ github.ref_name }}
+          body: ${{ steps.release_body.outputs.body }}
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

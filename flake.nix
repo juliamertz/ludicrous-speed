@@ -26,9 +26,11 @@
           ${lib.getExe pkgs.minify} ${path} > $out
         ''}";
 
+      packageManifest = lib.importJSON ./package.json;
+
       dashboard-js = pkgs.stdenvNoCC.mkDerivation {
         pname = "dashboard.js";
-        version = "0.1.1";
+        inherit (packageManifest) version;
 
         src = filter {
           root = ./.;
@@ -62,8 +64,7 @@
 
       manifestFor = targetBrowser:
         {
-          name = "LudicrousSpeed";
-          version = "1.1.0";
+          inherit (packageManifest) name version;
           manifest_version = 3;
           permissions = ["scripting"];
           host_permissions = ["<all_urls>"];
@@ -87,7 +88,7 @@
       in
         pkgs.buildNpmPackage {
           pname = "background.js";
-          version = "0.1.1";
+          inherit (packageManifest) version;
 
           src = filter {
             root = ./.;
@@ -97,7 +98,7 @@
               ./src/background.ts
             ];
           };
-          npmDepsHash = "sha256-fVVKnfDO6V0uP2SFI33NS73p11Fh+Np9BxXmv2Tp9B8=";
+          npmDepsHash = "sha256-5aoLZQmpwKqQ7JE87aQitDp4j1hTaJIwBDxi+fbH9Pc=";
 
           buildPhase = ''
             ${lib.getExe pkgs.bun} build ./src/background.ts --outfile=bundle.js

@@ -2,6 +2,7 @@ export interface ContainerOptions {
   title?: string;
   titleCount?: number;
   className?: string;
+  id?: string,
   spanColumns?: number;
   minHeight?: string;
 }
@@ -12,6 +13,10 @@ export function createContainer(options: ContainerOptions = {}): HTMLElement {
 
   if (options.className) {
     container.classList.add(options.className);
+  }
+
+  if (options.id) {
+    container.id = options.id
   }
 
   if (options.spanColumns === 2) {

@@ -123,6 +123,7 @@
           bun
           reflex
           nodePackages.prettier
+          awscli
         ];
       };
     });

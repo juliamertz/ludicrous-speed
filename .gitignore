@@ -9,3 +9,4 @@ node_modules/
 # generated
 src/styles/dashboard-css.ts
 private-key.pem
+.awsrc

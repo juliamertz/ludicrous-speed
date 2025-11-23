@@ -13,7 +13,10 @@ signature_path = $(dashboard_path).sig
 clean:
 	rm -rf result $(dist)
 
-build: clean build-chrome build-firefox build-dashboard
+format:
+	prettier --write .
+
+build: build-dashboard build-chrome build-firefox
 
 build-chrome:
 	nix build .#background-js-chrome
@@ -42,6 +45,10 @@ build-dashboard:
 	mkdir -p $(dashboard_dir)
 	cp --no-preserve=mode result/dashboard.js $(dashboard_dir)/dashboard.js
 	$(MAKE) sign-dashboard
+
+publish-dashboard:
+	$(MAKE) build-dashboard
+	aws s3 sync dist/dashboard s3://nettenshop
 
 pack-zip: pack-zip-chrome pack-zip-firefox
 

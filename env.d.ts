@@ -5,3 +5,5 @@
 declare module "./styles/dashboard-css" {
   export const dashboardCSS: string;
 }
+
+export {};

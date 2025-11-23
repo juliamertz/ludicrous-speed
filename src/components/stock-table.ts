@@ -11,7 +11,7 @@ export function createStockTable(options: StockTableOptions): HTMLElement {
     spanColumns: 2,
   });
 
-  container.style.marginBottom = "3.5rem";
+  container.style.marginBottom = "1rem";
   const scrollWrapper = document.createElement("div");
   scrollWrapper.classList.add("order-table-scroll");
 

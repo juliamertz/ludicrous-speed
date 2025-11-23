@@ -33,7 +33,17 @@ export function preventDoubleRun(
   return false;
 }
 
-export function removeElements(selector: string): void {
-  const elements = document.querySelectorAll(selector);
+export function removeElements(selector: string, root?: Element): void {
+  const elements = (root ?? document).querySelectorAll(selector);
   elements.forEach((el) => el.remove());
 }
+
+export function removeClassname(className: string, element?: Element | null) {
+  if (element) {
+    element.className = element.className
+      .split(" ")
+      .filter((value) => value !== className)
+      .join(" ");
+  }
+}
+

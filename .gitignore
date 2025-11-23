@@ -1,2 +1,5 @@
 node_modules/
 dist/
+.direnv
+.DS_Store
+src/styles/dashboard-css.ts

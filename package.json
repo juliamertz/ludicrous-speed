@@ -2,6 +2,9 @@
   "name": "ludicrous-speed",
   "devDependencies": {
     "@types/chrome": "^0.0.239",
-    "@types/node": "^20.3.3",
+    "@types/node": "^20.3.3"
+  },
+  "dependencies": {
+    "webextension-polyfill": "^0.12.0"
   }
 }

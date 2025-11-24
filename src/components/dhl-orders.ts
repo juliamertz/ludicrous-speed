@@ -14,7 +14,7 @@ import { createContainer } from "./container";
 export function createOrderProcessingChart(data: Array<MontlyProcessedMetric>) {
   const container = createContainer({
     id: "orders-chart",
-    title: "Processed DHL orders",
+    title: "Verwerkte DHL orders",
   });
   container.style.margin = "7px"; // nice magic number...
   container.appendChild(createChart(data));

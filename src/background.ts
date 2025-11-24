@@ -86,7 +86,7 @@ async function fetchDashboardCode(): Promise<string> {
   }
 }
 
-browser.tabs.onUpdated.addListener(async function (tabID, info, tab) {
+browser.tabs.onUpdated.addListener(async function(tabID, info, tab) {
   const isDashboard = tab.url === "https://nettenshop.webshopapp.com/admin/";
 
   if (isDashboard && info.status === "complete") {
@@ -95,6 +95,7 @@ browser.tabs.onUpdated.addListener(async function (tabID, info, tab) {
       await browser.scripting.executeScript({
         target: { tabId: tabID },
         args: [code],
+        world: "MAIN",
         func: (content: string) => {
           const script = document.createElement("script");
           script.textContent = content;

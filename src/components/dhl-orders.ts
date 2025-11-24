@@ -11,6 +11,8 @@ declare global {
 import { MontlyProcessedMetric } from "../api/adapter";
 import { createContainer } from "./container";
 
+import { Div } from "../utils/element";
+
 export function createOrderProcessingChart(data: Array<MontlyProcessedMetric>) {
   const container = createContainer({
     id: "orders-chart",
@@ -23,10 +25,11 @@ export function createOrderProcessingChart(data: Array<MontlyProcessedMetric>) {
 }
 
 function createChartContainer() {
-  const container = document.createElement("div");
   const chartId = "chart-" + Date.now();
-  container.id = chartId;
-  container.style.height = "350px";
+  const container = Div()
+    .id(chartId)
+    .style("height", "350px")
+    .create();
   document.body.appendChild(container);
   return container;
 }

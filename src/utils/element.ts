@@ -5,6 +5,7 @@ export class ElementBuilder<T extends TagName> {
   tag: T;
   childNodes: Array<Element>;
   innerText?: string;
+  innerHTML?: string;
   classNames: Array<string>;
   styleMap: Map<string, string>;
   attributes: Map<string, string>;
@@ -76,12 +77,20 @@ export class ElementBuilder<T extends TagName> {
   
   html(html: string): ElementBuilder<T> {
     this.innerText = undefined;
+    this.innerHTML = undefined;
     this.childNodes = [];
     const temp = document.createElement('div');
     temp.innerHTML = html;
     Array.from(temp.children).forEach(child => {
       this.childNodes.push(child as Element);
     });
+    return this;
+  }
+  
+  innerHTMLContent(html: string): ElementBuilder<T> {
+    this.innerText = undefined;
+    this.innerHTML = html;
+    this.childNodes = [];
     return this;
   }
   
@@ -92,7 +101,7 @@ export class ElementBuilder<T extends TagName> {
       element.className = this.classNames.join(' ');
     }
     
-    this.styles.forEach((value, key) => {
+    this.styleMap.forEach((value, key) => {
       (element.style as any)[key] = value;
     });
     
@@ -104,7 +113,9 @@ export class ElementBuilder<T extends TagName> {
       element.addEventListener(event, handler);
     });
     
-    if (this.innerText !== undefined) {
+    if (this.innerHTML !== undefined) {
+      element.innerHTML = this.innerHTML;
+    } else if (this.innerText !== undefined) {
       element.innerText = this.innerText;
     }
     
@@ -200,3 +211,45 @@ export const Img = (src: string, alt?: string) => {
   }
   return builder;
 };
+
+export const H3 = (text?: string) => {
+  const builder = new ElementBuilder('h3');
+  if (text !== undefined) {
+    builder.text(text);
+  }
+  return builder;
+};
+
+export const Table = (...children: (Element | ElementBuilder<any>)[]) => 
+  new ElementBuilder('table').children(...children);
+
+export const Thead = (...children: (Element | ElementBuilder<any>)[]) => 
+  new ElementBuilder('thead').children(...children);
+
+export const Tbody = (...children: (Element | ElementBuilder<any>)[]) => 
+  new ElementBuilder('tbody').children(...children);
+
+export const Tr = (...children: (Element | ElementBuilder<any>)[]) => 
+  new ElementBuilder('tr').children(...children);
+
+export const Td = (text?: string) => {
+  const builder = new ElementBuilder('td');
+  if (text !== undefined) {
+    builder.text(text);
+  }
+  return builder;
+};
+
+export const Th = (text?: string) => {
+  const builder = new ElementBuilder('th');
+  if (text !== undefined) {
+    builder.text(text);
+  }
+  return builder;
+};
+
+export const Style = (css: string) => 
+  new ElementBuilder('style').innerHTMLContent(css);
+
+export const Link = (rel: string, href: string) => 
+  new ElementBuilder('link').attr('rel', rel).attr('href', href);

@@ -1,5 +1,6 @@
 import type { FilteredOrder } from "../api/lightspeed";
 import { createContainer } from "./container";
+import { Div, P, A, Span } from "../utils/element";
 
 export interface OrderListOptions {
   title: string;
@@ -12,27 +13,26 @@ export function createOrderList(options: OrderListOptions): HTMLElement {
     titleCount: options.orders.length,
   });
 
-  const scrollWrapper = document.createElement("div");
-  scrollWrapper.classList.add("order-table-scroll");
-
-  const table = document.createElement("div");
-  table.classList.add("order-table");
-
-  options.orders.forEach((order) => {
-    const row = document.createElement("div");
-    row.classList.add("order-table-row");
-    row.innerHTML = `
-      <p>
-        <a href="${order.href}">
-          ${order.order_number}
-        </a> - ${order.customer_name}
-      </p>
-      <p>${order.date}</p>
-    `;
-    table.appendChild(row);
+  const rows = options.orders.map((order) => {
+    return Div()
+      .class("order-table-row")
+      .children(
+        P().children(
+          A(order.order_number, order.href),
+          Span(` - ${order.customer_name}`)
+        ),
+        P(order.date)
+      );
   });
 
-  scrollWrapper.appendChild(table);
-  container.appendChild(scrollWrapper);
+  const scrollWrapper = Div()
+    .class("order-table-scroll")
+    .children(
+      Div()
+        .class("order-table")
+        .children(...rows)
+    );
+
+  container.appendChild(scrollWrapper.create());
   return container;
 }

@@ -1,3 +1,5 @@
+import { Div } from "./element";
+
 export type LayoutType = "grid" | "flex";
 export type GridColumns = number | "auto-fit" | "auto-fill";
 
@@ -23,57 +25,57 @@ export interface LayoutOptions {
 }
 
 export function createLayoutContainer(options: LayoutOptions): HTMLElement {
-  const container = document.createElement("div");
+  const containerBuilder = Div();
 
   if (options.className) {
-    container.classList.add(options.className);
+    containerBuilder.class(options.className);
   }
 
   if (options.type === "grid") {
-    container.style.display = "grid";
+    containerBuilder.style("display", "grid");
     const gridOptions = options.grid || {};
 
     if (gridOptions.columns) {
       if (typeof gridOptions.columns === "number") {
-        container.style.gridTemplateColumns = `repeat(${gridOptions.columns}, 1fr)`;
+        containerBuilder.style("gridTemplateColumns", `repeat(${gridOptions.columns}, 1fr)`);
       } else {
-        container.style.gridTemplateColumns = `repeat(${gridOptions.columns}, minmax(0, 1fr))`;
+        containerBuilder.style("gridTemplateColumns", `repeat(${gridOptions.columns}, minmax(0, 1fr))`);
       }
     }
 
     if (gridOptions.gap) {
-      container.style.gap = gridOptions.gap;
+      containerBuilder.style("gap", gridOptions.gap);
     }
 
     if (gridOptions.padding) {
-      container.style.padding = gridOptions.padding;
+      containerBuilder.style("padding", gridOptions.padding);
     }
   } else if (options.type === "flex") {
-    container.style.display = "flex";
+    containerBuilder.style("display", "flex");
     const flexOptions = options.flex || {};
 
     if (flexOptions.direction) {
-      container.style.flexDirection = flexOptions.direction;
+      containerBuilder.style("flexDirection", flexOptions.direction);
     }
 
     if (flexOptions.justify) {
-      container.style.justifyContent = flexOptions.justify;
+      containerBuilder.style("justifyContent", flexOptions.justify);
     }
 
     if (flexOptions.align) {
-      container.style.alignItems = flexOptions.align;
+      containerBuilder.style("alignItems", flexOptions.align);
     }
 
     if (flexOptions.gap) {
-      container.style.gap = flexOptions.gap;
+      containerBuilder.style("gap", flexOptions.gap);
     }
 
     if (flexOptions.wrap !== undefined) {
-      container.style.flexWrap = flexOptions.wrap ? "wrap" : "nowrap";
+      containerBuilder.style("flexWrap", flexOptions.wrap ? "wrap" : "nowrap");
     }
   }
 
-  return container;
+  return containerBuilder.create();
 }
 
 type Grid = {

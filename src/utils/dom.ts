@@ -1,16 +1,16 @@
+import { Style, Link } from "./element";
+
 export function injectStyles(css: string): void {
-  const stylesElement = document.createElement("style");
-  stylesElement.innerHTML = css;
+  const stylesElement = Style(css).create();
   document.head.appendChild(stylesElement);
 }
 
 export function loadStylesheet(url: string): Promise<void> {
   return new Promise((resolve, reject) => {
-    const link = document.createElement("link");
-    link.rel = "stylesheet";
-    link.href = url;
-    link.onload = () => resolve();
-    link.onerror = () => reject(new Error(`Failed to load stylesheet: ${url}`));
+    const link = Link("stylesheet", url)
+      .on("load", () => resolve())
+      .on("error", () => reject(new Error(`Failed to load stylesheet: ${url}`)))
+      .create();
     document.head.appendChild(link);
   });
 }
@@ -28,6 +28,7 @@ export function preventDoubleRun(
     // Ignore errors
   }
 
+  // Use document.createElement directly for custom element names
   const marker = document.createElement(markerName);
   container.appendChild(marker);
   return false;

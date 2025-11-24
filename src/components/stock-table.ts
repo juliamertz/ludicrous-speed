@@ -1,5 +1,6 @@
 import type { StockItem } from "../api/adapter";
 import { createContainer } from "./container";
+import { Div, Table, Thead, Tbody, Tr, Th, Td, A } from "../utils/element";
 
 export interface StockTableOptions {
   stockItems: StockItem[];
@@ -12,36 +13,35 @@ export function createStockTable(options: StockTableOptions): HTMLElement {
   });
 
   container.style.marginBottom = "1rem";
-  const scrollWrapper = document.createElement("div");
-  scrollWrapper.classList.add("order-table-scroll");
-
-  const table = document.createElement("table");
-  table.classList.add("stock-table");
-  table.innerHTML = `
-    <thead>
-      <tr>
-        <th>Product</th>
-        <th>Variant</th>
-        <th>Voorraad</th>
-      </tr>
-    </thead>
-  `;
-
-  const tbody = document.createElement("tbody");
-
-  options.stockItems.forEach((item) => {
-    const row = document.createElement("tr");
+  
+  const rows = options.stockItems.map((item) => {
     const variant = Object.values(item.variants)[0];
-    row.innerHTML = `
-      <td>${item.title}</td>
-      <td><a href="https://nettenshop.webshopapp.com/admin/products/${item.id}">${variant.id || "N/A"}</a></td>
-      <td>${variant.stockLevel}</td>
-    `;
-    tbody.appendChild(row);
+    return Tr().children(
+      Td(item.title),
+      Td().children(
+        A(variant.id || "N/A", `https://nettenshop.webshopapp.com/admin/products/${item.id}`)
+      ),
+      Td(String(variant.stockLevel))
+    );
   });
 
-  table.appendChild(tbody);
-  scrollWrapper.appendChild(table);
-  container.appendChild(scrollWrapper);
+  const scrollWrapper = Div()
+    .class("order-table-scroll")
+    .children(
+      Table()
+        .class("stock-table")
+        .children(
+          Thead().children(
+            Tr().children(
+              Th("Product"),
+              Th("Variant"),
+              Th("Voorraad")
+            )
+          ),
+          Tbody().children(...rows)
+        )
+    );
+
+  container.appendChild(scrollWrapper.create());
   return container;
 }

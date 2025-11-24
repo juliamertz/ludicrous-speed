@@ -1,3 +1,5 @@
+import { Div, H3, Span } from "../utils/element";
+
 export interface ContainerOptions {
   title?: string;
   titleCount?: number;
@@ -8,52 +10,84 @@ export interface ContainerOptions {
 }
 
 export function createContainer(options: ContainerOptions = {}): HTMLElement {
-  const container = document.createElement("div");
-  container.classList.add("dashboard-item");
+  const containerBuilder = Div().class("dashboard-item");
 
   if (options.className) {
-    container.classList.add(options.className);
+    containerBuilder.class(options.className);
   }
 
   if (options.id) {
-    container.id = options.id;
+    containerBuilder.id(options.id);
   }
 
   if (options.spanColumns === 2) {
-    container.classList.add("dashboard-item--span-2");
+    containerBuilder.class("dashboard-item--span-2");
   }
 
   if (options.minHeight) {
-    container.style.minHeight = options.minHeight;
+    containerBuilder.style("minHeight", options.minHeight);
   }
 
   if (options.title) {
-    const title = document.createElement("h3");
-    title.classList.add("dashboard-item__title");
-
-    let titleText = options.title;
+    const titleBuilder = H3().class("dashboard-item__title");
+    
     if (options.titleCount !== undefined) {
-      titleText += ` <span class="dashboard-item__title-count">(${options.titleCount})</span>`;
+      titleBuilder.children(
+        Span(options.title),
+        Span(` (${options.titleCount})`).class("dashboard-item__title-count")
+      );
+    } else {
+      titleBuilder.text(options.title);
     }
-
-    title.innerHTML = titleText;
-    container.appendChild(title);
+    
+    containerBuilder.children(titleBuilder);
   }
 
-  return container;
+  return containerBuilder.create();
 }
 
 export function createContainerWithContent(
   options: ContainerOptions,
   content: HTMLElement | HTMLElement[],
 ): HTMLElement {
-  const container = createContainer(options);
+  const containerBuilder = Div().class("dashboard-item");
 
-  if (Array.isArray(content)) {
-    content.forEach((item) => container.appendChild(item));
-  } else {
-    container.appendChild(content);
+  if (options.className) {
+    containerBuilder.class(options.className);
   }
 
-  return container;
+  if (options.id) {
+    containerBuilder.id(options.id);
+  }
+
+  if (options.spanColumns === 2) {
+    containerBuilder.class("dashboard-item--span-2");
+  }
+
+  if (options.minHeight) {
+    containerBuilder.style("minHeight", options.minHeight);
+  }
+
+  if (options.title) {
+    const titleBuilder = H3().class("dashboard-item__title");
+    
+    if (options.titleCount !== undefined) {
+      titleBuilder.children(
+        Span(options.title),
+        Span(` (${options.titleCount})`).class("dashboard-item__title-count")
+      );
+    } else {
+      titleBuilder.text(options.title);
+    }
+    
+    containerBuilder.children(titleBuilder);
+  }
+
+  if (Array.isArray(content)) {
+    containerBuilder.children(...content);
+  } else {
+    containerBuilder.children(content);
+  }
+
+  return containerBuilder.create();
 }

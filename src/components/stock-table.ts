@@ -13,15 +13,18 @@ export function createStockTable(options: StockTableOptions): HTMLElement {
   });
 
   container.style.marginBottom = "1rem";
-  
+
   const rows = options.stockItems.map((item) => {
     const variant = Object.values(item.variants)[0];
     return Tr().children(
       Td(item.title),
       Td().children(
-        A(variant.id || "N/A", `https://nettenshop.webshopapp.com/admin/products/${item.id}`)
+        A(
+          variant.id || "N/A",
+          `https://nettenshop.webshopapp.com/admin/products/${item.id}`,
+        ),
       ),
-      Td(String(variant.stockLevel))
+      Td(String(variant.stockLevel)),
     );
   });
 
@@ -32,14 +35,10 @@ export function createStockTable(options: StockTableOptions): HTMLElement {
         .class("stock-table")
         .children(
           Thead().children(
-            Tr().children(
-              Th("Product"),
-              Th("Variant"),
-              Th("Voorraad")
-            )
+            Tr().children(Th("Product"), Th("Variant"), Th("Voorraad")),
           ),
-          Tbody().children(...rows)
-        )
+          Tbody().children(...rows),
+        ),
     );
 
   container.appendChild(scrollWrapper.create());

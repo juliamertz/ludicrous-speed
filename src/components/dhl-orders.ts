@@ -26,10 +26,7 @@ export function createOrderProcessingChart(data: Array<MontlyProcessedMetric>) {
 
 function createChartContainer() {
   const chartId = "chart-" + Date.now();
-  const container = Div()
-    .id(chartId)
-    .style("height", "350px")
-    .create();
+  const container = Div().id(chartId).style("height", "350px").create();
   document.body.appendChild(container);
   return container;
 }

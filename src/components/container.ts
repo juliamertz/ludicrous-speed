@@ -30,16 +30,16 @@ export function createContainer(options: ContainerOptions = {}): HTMLElement {
 
   if (options.title) {
     const titleBuilder = H3().class("dashboard-item__title");
-    
+
     if (options.titleCount !== undefined) {
       titleBuilder.children(
         Span(options.title),
-        Span(` (${options.titleCount})`).class("dashboard-item__title-count")
+        Span(` (${options.titleCount})`).class("dashboard-item__title-count"),
       );
     } else {
       titleBuilder.text(options.title);
     }
-    
+
     containerBuilder.children(titleBuilder);
   }
 
@@ -70,16 +70,16 @@ export function createContainerWithContent(
 
   if (options.title) {
     const titleBuilder = H3().class("dashboard-item__title");
-    
+
     if (options.titleCount !== undefined) {
       titleBuilder.children(
         Span(options.title),
-        Span(` (${options.titleCount})`).class("dashboard-item__title-count")
+        Span(` (${options.titleCount})`).class("dashboard-item__title-count"),
       );
     } else {
       titleBuilder.text(options.title);
     }
-    
+
     containerBuilder.children(titleBuilder);
   }
 

@@ -37,9 +37,15 @@ export function createLayoutContainer(options: LayoutOptions): HTMLElement {
 
     if (gridOptions.columns) {
       if (typeof gridOptions.columns === "number") {
-        containerBuilder.style("gridTemplateColumns", `repeat(${gridOptions.columns}, 1fr)`);
+        containerBuilder.style(
+          "gridTemplateColumns",
+          `repeat(${gridOptions.columns}, 1fr)`,
+        );
       } else {
-        containerBuilder.style("gridTemplateColumns", `repeat(${gridOptions.columns}, minmax(0, 1fr))`);
+        containerBuilder.style(
+          "gridTemplateColumns",
+          `repeat(${gridOptions.columns}, minmax(0, 1fr))`,
+        );
       }
     }
 

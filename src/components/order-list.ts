@@ -19,9 +19,9 @@ export function createOrderList(options: OrderListOptions): HTMLElement {
       .children(
         P().children(
           A(order.order_number, order.href),
-          Span(` - ${order.customer_name}`)
+          Span(` - ${order.customer_name}`),
         ),
-        P(order.date)
+        P(order.date),
       );
   });
 
@@ -30,7 +30,7 @@ export function createOrderList(options: OrderListOptions): HTMLElement {
     .children(
       Div()
         .class("order-table")
-        .children(...rows)
+        .children(...rows),
     );
 
   container.appendChild(scrollWrapper.create());

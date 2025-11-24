@@ -14,6 +14,7 @@ clean:
 	rm -rf result $(dist)
 
 update-deps:
+	npm install
 	nix run .#update-deps-hash
 
 format:

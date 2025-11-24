@@ -1,6 +1,6 @@
 {
   "name": "ludicrous-speed",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "devDependencies": {
     "@types/amcharts": "^3.21.11",
     "@types/chrome": "^0.0.239",

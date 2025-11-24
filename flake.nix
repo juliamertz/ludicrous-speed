@@ -98,7 +98,7 @@
               ./src/background.ts
             ];
           };
-          npmDepsHash = "sha256-5aoLZQmpwKqQ7JE87aQitDp4j1hTaJIwBDxi+fbH9Pc=";
+          npmDepsHash = "sha256-f1pCb4Barzv47IW3iHRF2fwKRs52s1Z+D1FHsQlIdmk=";
 
           buildPhase = ''
             ${lib.getExe pkgs.bun} build ./src/background.ts --outfile=bundle.js

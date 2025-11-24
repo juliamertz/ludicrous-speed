@@ -13,6 +13,9 @@ signature_path = $(dashboard_path).sig
 clean:
 	rm -rf result $(dist)
 
+update-deps:
+	nix run .#update-deps-hash
+
 format:
 	prettier --write .
 

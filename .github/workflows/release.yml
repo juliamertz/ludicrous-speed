@@ -16,6 +16,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
+      - name: Extract version from package.json
+        id: get_version
+        run: |
+          VERSION=$(jq -r '.version // empty' package.json)
+          if [ -z "$VERSION" ]; then
+            echo "Unable to determine version from package.json" >&2
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Extension version: $VERSION"
+
       - uses: cachix/install-nix-action@v31
         with:
           nix_path: nixpkgs=channel:nixos-unstable
@@ -35,33 +46,32 @@ jobs:
         run: make build-firefox
 
       - name: Package Chrome extension
+        env:
+          VERSION: ${{ steps.get_version.outputs.version }}
         run: |
           cd dist/chrome
-          zip -r ../ludicrous-speed-chrome.zip .
+          zip -r ../ludicrous-speed-chrome-v${VERSION}.zip .
           cd ../..
 
       - name: Package Firefox extension
+        env:
+          VERSION: ${{ steps.get_version.outputs.version }}
         run: |
           cd dist/firefox
-          zip -r ../ludicrous-speed-firefox.zip .
+          zip -r ../ludicrous-speed-firefox-v${VERSION}.zip .
           cd ../..
-
-      - name: Extract version from manifest
-        id: get_version
-        run: |
-          VERSION=$(grep -o '"version": "[^"]*"' manifests/chrome.json | cut -d'"' -f4)
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Extension version: $VERSION"
 
       - name: Generate release body
         id: release_body
+        env:
+          VERSION: ${{ steps.get_version.outputs.version }}
         run: |
-          cat > /tmp/release_body.md << 'EOF'
+          cat > /tmp/release_body.md << EOF
           ## Installation Instructions
 
           ### Chrome / Chromium
 
-          1. Download `ludicrous-speed-chrome.zip` from the assets below
+          1. Download `ludicrous-speed-chrome-v${VERSION}.zip` from the assets below
           2. Extract the ZIP file to a folder on your computer
           3. Open Chrome and navigate to `chrome://extensions/`
           4. Enable "Developer mode" (toggle in the top right)
@@ -70,7 +80,7 @@ jobs:
 
           ### Firefox
 
-          1. Download `ludicrous-speed-firefox.zip` from the assets below
+          1. Download `ludicrous-speed-firefox-v${VERSION}.zip` from the assets below
           2. Extract the ZIP file to a folder on your computer
           3. Open Firefox and navigate to `about:debugging`
           4. Click "This Firefox" in the left sidebar
@@ -85,8 +95,8 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            dist/ludicrous-speed-chrome.zip
-            dist/ludicrous-speed-firefox.zip
+            dist/ludicrous-speed-chrome-v${{ steps.get_version.outputs.version }}.zip
+            dist/ludicrous-speed-firefox-v${{ steps.get_version.outputs.version }}.zip
           name: Release v${{ steps.get_version.outputs.version }}
           tag_name: ${{ github.ref_name }}
           body: ${{ steps.release_body.outputs.body }}

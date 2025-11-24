@@ -15,6 +15,12 @@ export type MontlyProcessedMetric = {
   entries: number;
 };
 
+export type OrderMetrics = {
+  processed: number;
+  unprocessed: number;
+  chartData: Array<MontlyProcessedMetric>;
+};
+
 export class Adapter {
   private endpoint: string = "https://nettenshop.juliamertz.dev";
 
@@ -29,14 +35,9 @@ export class Adapter {
     return data as Array<StockItem>;
   }
 
-  async getMonthlyProcessedChart(): Promise<Array<MontlyProcessedMetric>> {
+  async getMonthlyProcessedChart(): Promise<OrderMetrics> {
     const response = await fetch(this.endpoint + "/order-processing-chart");
     const data = await response.json();
-
-    if (!Array.isArray(data)) {
-      throw new Error("invalid stock response from adapter");
-    }
-
-    return data as Array<MontlyProcessedMetric>;
+    return data as OrderMetrics;
   }
 }

@@ -16,7 +16,7 @@ import {
 
 import { createOrderList } from "./components/order-list";
 import { createStockTable } from "./components/stock-table";
-import { createOrderProcessingChart } from "./components/dhl-orders";
+import { createOrderProcessingMetrics } from "./components/dhl-orders";
 
 function cleanupDashboard(container: Element): void {
   // advertisment card to the right of graph
@@ -89,8 +89,8 @@ async function init(): Promise<void> {
   await Promise.all(orderPromises);
 
   try {
-    const chartData = await adapter.getMonthlyProcessedChart();
-    const chart = createOrderProcessingChart(chartData);
+    const metrics = await adapter.getMonthlyProcessedChart();
+    const chart = createOrderProcessingMetrics(metrics);
     dashboardContainer.appendChild(chart);
   } catch (error) {
     console.error({

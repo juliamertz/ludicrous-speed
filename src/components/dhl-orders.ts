@@ -8,37 +8,76 @@ declare global {
   };
 }
 
-import { MontlyProcessedMetric } from "../api/adapter";
+import { MontlyProcessedMetric, OrderMetrics } from "../api/adapter";
 import { createContainer } from "./container";
 
-import { Div } from "../utils/element";
+import { Br, Div, P, Span } from "../utils/element";
 
-export function createOrderProcessingChart(data: Array<MontlyProcessedMetric>) {
-  const container = createContainer({
+export function createMetricStatDisplay(metric: any, description?: string) {
+  return Div(
+    P()
+      .children(
+        Span(metric.toString()).style("fontSize", "2.5rem").class("mussel"),
+        Br(),
+        Br(),
+        Span(description ?? "")
+          .style("fontSize", "1.5rem")
+          .style("marginTop", ".5rem")
+          .class("mosesDark"),
+      )
+      .style("textAlign", "center"),
+  )
+    .style("background", "white")
+    .style("width", "100%")
+    .style("display", "grid")
+    .style("placeItems", "center")
+    .style("gap", "1.5rem")
+    .style("padding", "2rem")
+    .style("border", "solid 1px #c4cacc");
+}
+
+export function createOrderProcessingMetrics(metrics: OrderMetrics) {
+  const metricDivs = [
+    createMetricStatDisplay(metrics.processed, "Totaal verwerkte orders").style("borderRight", "none"),
+    createMetricStatDisplay(metrics.unprocessed, "Totaal onverwerkte orders"),
+    Div(),
+  ];
+
+  const container = Div().styles({ display: "flex", flexDirection: "column" });
+
+  const statsContainer = Div()
+    .styles({ display: "flex", flexDirection: "row" })
+    .children(...metricDivs)
+    .style("width", "100%")
+    .style("padding", "0 6px")
+    .style("marginTop", "1rem")
+    .style("marginBottom", "1rem")
+    .create();
+
+  const chartContainer = createContainer({
     id: "orders-chart",
     title: "Verwerkte DHL orders",
   });
-  container.style.margin = "7px"; // nice magic number...
-  container.appendChild(createChart(data));
+  chartContainer.style.margin = "7px"; // nice magic number...
+  chartContainer.appendChild(createChart(metrics.chartData));
 
-  return container;
-}
-
-function createChartContainer() {
-  const chartId = "chart-" + Date.now();
-  const container = Div().id(chartId).style("height", "350px").create();
-  document.body.appendChild(container);
-  return container;
+  return container.children(statsContainer, chartContainer).create();
 }
 
 function createChart(data: Array<MontlyProcessedMetric>) {
-  const container = createChartContainer();
+  function createContainer() {
+    const chartId = "chart-" + Date.now();
+    const container = Div().id(chartId).style("height", "350px").create();
+    document.body.appendChild(container);
+    return container;
+  }
+
+  const container = createContainer();
   let chart: AmChartsTypes.AmSerialChart;
   let graph: AmChartsTypes.AmGraph;
 
   chart = new AmCharts.AmSerialChart();
 
-  // Margins - match exact values
   chart.marginTop = 20;
   chart.marginRight = 20;
   chart.marginLeft = 10;
@@ -46,34 +85,28 @@ function createChart(data: Array<MontlyProcessedMetric>) {
   chart.autoMarginOffset = 10;
   chart.autoMargins = true;
 
-  // Theme and styling
   chart.fontFamily = "LatoWeb, Helvetica Neue, Helvetica, Arial, sans-serif";
-  chart.fontSize = 14;
+  chart.fontSize = '14';
   chart.color = "#494c4c";
   chart.pathToImages = "assets/amcharts/themes/seoshop/images/";
 
-  // Background
   chart.backgroundColor = "#ffffff";
   chart.backgroundAlpha = 0;
   chart.plotAreaBorderAlpha = 0;
   chart.plotAreaFillAlphas = 0;
 
-  // Data configuration
   chart.dataProvider = data;
-  chart.categoryField = "month"; // ← CHANGED BACK
-  chart.dataDateFormat = "YYYY-MM-DD";
+  chart.categoryField = "month";
+  (chart as any).dataDateFormat = "YYYY-MM-DD";
 
-  // Number formatting
   chart.thousandsSeparator = ",";
   chart.decimalSeparator = ".";
   chart.percentPrecision = 2;
 
-  // Balloon configuration
   chart.balloon.cornerRadius = 6;
   chart.balloon.fillColor = "#FFFFFF";
   chart.balloonDateFormat = "MMM DD, YYYY";
 
-  // Category axis
   const categoryAxis = chart.categoryAxis;
   categoryAxis.parseDates = true;
   categoryAxis.minPeriod = "MM";
@@ -83,7 +116,6 @@ function createChart(data: Array<MontlyProcessedMetric>) {
   categoryAxis.axisColor = "#848A8A";
   categoryAxis.axisAlpha = 1;
 
-  // Value axis
   const valueAxis = new AmCharts.ValueAxis();
   valueAxis.axisAlpha = 0;
   valueAxis.gridAlpha = 0;
@@ -92,7 +124,6 @@ function createChart(data: Array<MontlyProcessedMetric>) {
   valueAxis.inside = true;
   chart.addValueAxis(valueAxis);
 
-  // Graph
   graph = new AmCharts.AmGraph();
   graph.lineColor = "#2775C6";
   graph.bullet = "round";
@@ -106,16 +137,15 @@ function createChart(data: Array<MontlyProcessedMetric>) {
   graph.lineAlpha = 1;
   graph.fillAlphas = 0;
   graph.useLineColorForBulletBorder = true;
-  graph.valueField = "entries"; // ← CHANGED BACK
+  graph.valueField = "entries";
   graph.balloonText =
     "[[category]]<br><b><span style='font-size:14px;'>[[value]] entries</span></b>";
   graph.balloonColor = "#494c4c";
   chart.addGraph(graph);
 
-  // Chart cursor
   const chartCursor = new AmCharts.ChartCursor();
   chartCursor.pan = false;
-  chartCursor.valueLineEnabled = false;
+  (chartCursor as any).valueLineEnabled = false;
   chartCursor.categoryBalloonEnabled = false;
   chartCursor.cursorAlpha = 0;
   chartCursor.cursorPosition = "mouse";
@@ -123,9 +153,8 @@ function createChart(data: Array<MontlyProcessedMetric>) {
   chartCursor.bulletSize = 2;
   chart.addChartCursor(chartCursor);
 
-  // Other settings
   chart.creditsPosition = "top-left";
-  chart.hideCredits = true;
+  (chart as any).hideCredits = true;
   chart.sequencedAnimation = true;
   chart.startDuration = 0;
   chart.columnSpacing = 5;

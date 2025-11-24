@@ -13,12 +13,18 @@
     systems,
     nix-filter,
   }: let
-    filter = nix-filter.lib;
     inherit (nixpkgs) lib;
     eachSystem = f:
       lib.genAttrs (import systems) (
         system: f (import nixpkgs {inherit system;})
       );
+
+    filter = nix-filter.lib;
+    buildDependencies = pkgs:
+      with pkgs; [
+        bun
+        minify
+      ];
   in {
     packages = eachSystem (pkgs: let
       minify = path:
@@ -120,30 +126,14 @@
 
     devShells = eachSystem (pkgs: {
       default = pkgs.mkShell {
-        packages = with pkgs; [
-          bun
-          reflex
-          nodePackages.prettier
-          awscli
-          prefetch-npm-deps
-        ];
-      };
-    });
-
-    apps = eachSystem (pkgs: {
-      update-deps-hash = {
-        type = "app";
-        program = "${pkgs.writeShellScriptBin "update-npm-deps-hash" ''
-          export PATH="${lib.makeBinPath (with pkgs; [ prefetch-npm-deps gnused ])}:$PATH"
-          hash=$(prefetch-npm-deps package-lock.json 2>/dev/null)
-          if [ -z "$hash" ]; then
-            echo "Error: Failed to generate hash" >&2
-            exit 1
-          fi
-          echo "Generated hash: $hash" >&2
-          sed -i "s|npmDepsHash = \".*\";|npmDepsHash = \"$hash\";|" flake.nix
-          echo "Updated npmDepsHash in flake.nix"
-        ''}/bin/update-npm-deps-hash";
+        packages = with pkgs;
+          [
+            reflex
+            nodePackages.prettier
+            awscli
+            prefetch-npm-deps
+          ]
+          ++ (buildDependencies pkgs);
       };
     });
   };

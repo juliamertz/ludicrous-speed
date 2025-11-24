@@ -255,3 +255,6 @@ export const Style = (css: string) =>
 
 export const Link = (rel: string, href: string) =>
   new ElementBuilder("link").attr("rel", rel).attr("href", href);
+
+export const Br = () =>
+  new ElementBuilder("br")
